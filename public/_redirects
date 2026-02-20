@@ -1,0 +1,2 @@
+/api/*  https://a1.gpsguard.eu/api/:splat  200
+/owm/*  https://api.openweathermap.org/:splat  200
