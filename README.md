@@ -65,3 +65,6 @@ Dále drobné opravy/vylepšení původního návrhu, které se v průběhu vytv
 - OpenWeatherMap API — aktuální počasí
 - CSS Variables — design systém bez UI frameworku
 - Vite Proxy — CORS řešení pro dev prostředí
+
+Funkční demo zde:
+https://fleet-dozor-demo.netlify.app/
