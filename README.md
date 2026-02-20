@@ -18,7 +18,7 @@ Dashboard pro **dispečera nebo fleet manažera** — člověka, který potřebu
 
 ## AI workflow
 
-Celý vývoj probíhal s **Claude (claude.ai)** v průběhu několika dnů:
+Celý vývoj probíhal s **Claude (claude.ai)** :
 
 1. **Analýza zadání** — Claude načetl PDF s požadavky a API dokumentaci, navrhl architekturu - schváleno
 2. **Prototyp** — vygeneroval funkční Vue 3 aplikaci s živými daty pro rychlé ověření konceptu
