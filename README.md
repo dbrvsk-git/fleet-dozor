@@ -1,6 +1,6 @@
 # Fleet Dozor Dashboard
 
-Webová aplikace pro správu vozového parku postavená nad GPS Dozor API.
+Webová aplikace pro správu vozového parku postavená na GPS Dozor API.
 
 ## Pro koho a proč
 
