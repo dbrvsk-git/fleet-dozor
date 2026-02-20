@@ -12,6 +12,7 @@
   <template v-else>
     <!-- HEADER -->
     <header>
+      <div class="header-car">🚗</div>
       <div class="logo">
         <div class="logo-dot"></div>
         Fleet Dozor
@@ -20,12 +21,15 @@
         <span class="status-live">LIVE</span>
         <span>{{ groupName }}</span>
       </div>
-      <div class="header-time">{{ clock }}</div>
+      <div class="header-datetime">
+        <div class="header-date">{{ date }}</div>
+        <span style="color: white">|</span>
+        <div class="header-time">{{ clock }}</div>
+      </div>
     </header>
 
     <!-- LAYOUT -->
     <div class="app-layout">
-
       <!-- Sidebar se seznamem vozidel -->
       <VehicleList
         :vehicles="vehicles"
@@ -36,18 +40,18 @@
 
       <!-- Pravá část: mapa + spodní panel -->
       <div class="main-content">
-
-        <MapView
-          :vehicles="vehicles"
-          :selected="selected"
-          :route="route"
-          :mode="mapMode"
-          @mode-change="onModeChange"
-          @vehicle-click="onSelectVehicle"
-        />
+        <div class="map-wrapper">
+          <MapView
+            :vehicles="vehicles"
+            :selected="selected"
+            :route="route"
+            :mode="mapMode"
+            @mode-change="onModeChange"
+            @vehicle-click="onSelectVehicle"
+          />
+        </div>
 
         <div class="bottom-panel">
-
           <!-- Detail vybraného vozidla -->
           <div class="panel-section">
             <div class="panel-title">
@@ -58,18 +62,10 @@
           </div>
 
           <!-- Kniha jízd -->
-          <TripBook
-            :vehicle-code="selected?.Code"
-            @dates-change="onDatesChange"
-          />
+          <TripBook :vehicle-code="selected?.Code" @dates-change="onDatesChange" />
 
-          <!-- Eco driving -->
-          <EcoDriving
-            :vehicle-code="selected?.Code"
-            :date-from="dates.from"
-            :date-to="dates.to"
-          />
-
+          <!-- Spotřeba paliva -->
+          <FuelAnalysis :vehicle-code="selected?.Code" />
         </div>
       </div>
     </div>
@@ -83,7 +79,7 @@ import { getGroups, getVehicles, getVehicleHistory, formatDateForApi } from './a
 import VehicleList from './components/VehicleList.vue'
 import MapView from './components/MapView.vue'
 import TripBook from './components/TripBook.vue'
-import EcoDriving from './components/EcoDriving.vue'
+import FuelAnalysis from './components/FuelAnalysis.vue'
 import VehicleDetail from './components/VehicleDetail.vue'
 
 // ─── State ────────────────────────────────────────────────
@@ -99,15 +95,25 @@ const selected = ref(null)
 const mapMode = ref('live')
 const route = ref([])
 const clock = ref('')
+const date = ref('')
 const dates = ref({ from: null, to: null })
 
 let refreshInterval = null
 let clockInterval = null
 
-// ─── Clock ────────────────────────────────────────────────
+// ─── Clock + Date ─────────────────────────────────────────
 function updateClock() {
-  clock.value = new Date().toLocaleTimeString('cs-CZ', {
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  const now = new Date()
+  clock.value = now.toLocaleTimeString('cs-CZ', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+  date.value = now.toLocaleDateString('cs-CZ', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   })
 }
 
@@ -131,7 +137,9 @@ onMounted(async () => {
     loadingPct.value = 100
     loadingText.value = 'Hotovo!'
 
-    setTimeout(() => { appLoading.value = false }, 400)
+    setTimeout(() => {
+      appLoading.value = false
+    }, 400)
 
     // Auto-refresh každých 30 sekund
     refreshInterval = setInterval(refreshVehicles, 30_000)
@@ -153,7 +161,7 @@ async function refreshVehicles() {
 
     // Aktualizuj selected vehicle pokud je vybrané
     if (selected.value) {
-      const updated = fresh.find(v => v.Code === selected.value.Code)
+      const updated = fresh.find((v) => v.Code === selected.value.Code)
       if (updated) selected.value = updated
     }
   } catch (e) {
@@ -164,7 +172,6 @@ async function refreshVehicles() {
 // ─── Výběr vozidla ────────────────────────────────────────
 function onSelectVehicle(vehicle) {
   selected.value = vehicle
-  // Pokud je zapnutá trasa a máme datum, načti ji
   if (mapMode.value === 'track' && dates.value.from) {
     loadRoute()
   }
@@ -194,7 +201,7 @@ async function loadRoute() {
   }
 }
 
-// ─── Callback z TripBook — dostaneme zvolené datum ────────
+// ─── Callback z TripBook — jen pro mapu ──────────────────
 function onDatesChange({ from, to }) {
   dates.value = { from, to }
   if (mapMode.value === 'track') loadRoute()

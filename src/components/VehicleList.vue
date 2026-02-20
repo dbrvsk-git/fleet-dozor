@@ -2,15 +2,20 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-label">
-        Vozidla
+        POČET VOZIDEL VE FLOTILE
         <span class="count-badge">{{ vehicles.length }}</span>
       </div>
-      <input
-        v-model="search"
-        class="search-box"
-        type="text"
-        placeholder="Hledat vozidlo nebo SPZ…"
-      />
+      <div class="search-row">
+        <input
+          v-model="search"
+          class="search-box"
+          type="text"
+          placeholder="Hledat vozidlo nebo SPZ…"
+        />
+        <button v-if="search" class="clear-search-btn" @click="search = ''" title="Vymazat hledání">
+          Zpět
+        </button>
+      </div>
     </div>
 
     <div class="vehicle-list">
@@ -37,7 +42,7 @@
       >
         <div class="vehicle-card-top">
           <div class="vehicle-name">{{ v.Name }}</div>
-          <div v-if="v.SPZ" class="vehicle-spz">{{ v.SPZ }}</div>
+          <div v-if="v.SPZ" class="vehicle-spz">RZ: {{ v.SPZ }}</div>
         </div>
 
         <div class="vehicle-stats">
@@ -71,7 +76,7 @@ const filtered = computed(() => {
   if (!search.value) return props.vehicles
   const q = search.value.toLowerCase()
   return props.vehicles.filter(
-    v => v.Name.toLowerCase().includes(q) || (v.SPZ || '').toLowerCase().includes(q)
+    (v) => v.Name.toLowerCase().includes(q) || (v.SPZ || '').toLowerCase().includes(q),
   )
 })
 
@@ -80,3 +85,33 @@ function formatTime(ts) {
   return new Date(ts).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
 }
 </script>
+
+<style scoped>
+.search-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+}
+
+.clear-search-btn {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.clear-search-btn:hover {
+  background: #00b347;
+}
+</style>

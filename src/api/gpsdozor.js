@@ -3,12 +3,13 @@
 // Dokumentace: https://www.gpsdozor.cz/documentation/api
 // ─────────────────────────────────────────────────────────
 
-const API_BASE = 'https://a1.gpsguard.eu/api/v1'
+// Lokálně jde přes Vite proxy (/api → https://a1.gpsguard.eu)
+// viz vite.config.js → server.proxy
 
-// Přihlašovací údaje (demo přístupy z dokumentace)
-// Pro produkci přesuň do .env souboru jako:
-//   VITE_API_USER=api_gpsdozor
-//   VITE_API_PASS=yakmwlARdn
+//lokal API
+const API_BASE = '/api/v1'
+
+// Přihlašovací údaje — čte z .env, fallback na demo přístupy
 const API_USER = import.meta.env.VITE_API_USER || 'api_gpsdozor'
 const API_PASS = import.meta.env.VITE_API_PASS || 'yakmwlARdn'
 
@@ -18,15 +19,13 @@ const AUTH_HEADER = 'Basic ' + btoa(`${API_USER}:${API_PASS}`)
 async function apiFetch(path) {
   const response = await fetch(API_BASE + path, {
     headers: {
-      'Authorization': AUTH_HEADER,
+      Authorization: AUTH_HEADER,
       'Content-Type': 'application/json',
     },
   })
-
   if (!response.ok) {
     throw new Error(`API chyba ${response.status} na cestě: ${path}`)
   }
-
   return response.json()
 }
 
@@ -47,7 +46,6 @@ export async function getVehicle(vehicleCode) {
 
 // ─── Endpoint 4: Historie pozic (trasa na mapě) ──────────
 export async function getVehicleHistory(vehicleCodes, from, to) {
-  // vehicleCodes = pole kódů nebo string "KOD1,KOD2"
   const codes = Array.isArray(vehicleCodes) ? vehicleCodes.join(',') : vehicleCodes
   return apiFetch(`/vehicles/history/${codes}?from=${from}&to=${to}`)
 }
@@ -57,12 +55,21 @@ export async function getTrips(vehicleCode, from, to) {
   return apiFetch(`/vehicle/${vehicleCode}/trips?from=${from}&to=${to}`)
 }
 
-// ─── Endpoint 6: Eco driving ─────────────────────────────
+// ─── Endpoint 6: Data ze senzorů ─────────────────────────
+// sensors = čárkou oddělené typy, např. 'FuelActualVolume,Speed'
+// Dostupné typy: FuelActualVolume, FuelActualVolumeFromPercentage,
+//   FuelConsumedTotal, FuelConsumptionActual, Speed, Rpm, Odometer,
+//   Temperature1-4, Altitude, ThrottlePercentage, ...
+export async function getSensors(vehicleCode, sensors, from, to) {
+  return apiFetch(`/vehicle/${vehicleCode}/sensors/${sensors}?from=${from}&to=${to}`)
+}
+
+// ─── Endpoint 7: Eco driving (zachováno pro budoucí použití) ─
 export async function getEcoDriving(vehicleCode, from, to) {
   return apiFetch(`/vehicle/${vehicleCode}/eco-driving-events?from=${from}&to=${to}`)
 }
 
-// ─── Endpoint 7: Stav motoru / relay ─────────────────────
+// ─── Endpoint 8: Stav motoru / relay ─────────────────────
 export async function getEngineRelayState(vehicleCode) {
   return apiFetch(`/vehicle/${vehicleCode}/getEngineRelayState`)
 }
@@ -72,7 +79,7 @@ export async function getEngineRelayState(vehicleCode) {
 // Výstup: "2024-01-15T00:00" (formát co API očekává)
 export function formatDateForApi(date, endOfDay = false) {
   const d = typeof date === 'string' ? new Date(date) : date
-  const pad = n => String(n).padStart(2, '0')
+  const pad = (n) => String(n).padStart(2, '0')
   const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
   const timeStr = endOfDay ? 'T23:59' : 'T00:00'
   return dateStr + timeStr
