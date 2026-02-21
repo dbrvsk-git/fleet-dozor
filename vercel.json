@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://a1.gpsguard.eu/api/:path*"
+    },
+    {
+      "source": "/owm/:path*",
+      "destination": "https://api.openweathermap.org/:path*"
+    }
+  ]
+}
