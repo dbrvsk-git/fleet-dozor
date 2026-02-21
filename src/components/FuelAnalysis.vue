@@ -18,7 +18,7 @@
 
     <!-- Bez vozidla -->
     <div v-if="!vehicleCode" class="empty-state">
-      <span class="empty-icon">⛽</span> Vyberte vozidlo ze seznamu vlevo
+      <span class="empty-icon">⛽</span> Pro zobrazení údajů vyber vozidlo z mapy nebo ze seznamu
     </div>
 
     <div v-else-if="loading" class="empty-state">
@@ -251,7 +251,11 @@ async function load() {
 
 watch(
   () => props.vehicleCode,
-  () => load(),
+  async (v, old) => {
+    if (!v || v === old) return
+    await load()
+  },
+  { immediate: true },
 )
 watch(view, async (v) => {
   if (v === 'chart') {
@@ -492,6 +496,20 @@ function formatFuelFull(trip) {
   const liters = trip.FuelConsumed?.Value
   return liters ? liters.toFixed(1) + ' l' : '—'
 }
+
+//cache
+async function loadFuel(vehicleCode) {
+  if (fuelCache.has(vehicleCode)) {
+    fuelAnalysis.value = fuelCache.get(vehicleCode)
+    return
+  }
+
+  const res = await fetch(`/api/v1/fuel/${vehicleCode}`)
+  const data = await res.json()
+
+  fuelCache.set(vehicleCode, data)
+  fuelAnalysis.value = data
+}
 </script>
 
 <style scoped>
@@ -520,7 +538,7 @@ function formatFuelFull(trip) {
 
 .fuel-kpi {
   background: var(--surface2);
-  border: 1px solid var(--border);
+  /* border: 1px solid var(--border); */
   border-radius: 8px;
   padding: 8px 10px;
   text-align: center;
@@ -587,15 +605,16 @@ function formatFuelFull(trip) {
   grid-template-columns: 80px 1fr auto auto;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 8px 8px;
   border-radius: 7px;
   cursor: pointer;
-  border: 1px solid transparent;
+  /* border: 1px solid transparent; */
   transition: all 0.12s;
+  margin: 3px 0;
 }
 
 .month-day:hover {
-  background: var(--surface2);
+  background: var(--surface);
   border-color: var(--border);
 }
 
@@ -733,7 +752,7 @@ function formatFuelFull(trip) {
 
 .trip-detail {
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* border: 1px solid var(--border); */
   border-top: none;
   border-radius: 0 0 8px 8px;
   padding: 10px 12px;
