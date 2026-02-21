@@ -33,7 +33,7 @@
 
     <!-- Bez vozidla -->
     <div v-if="!vehicleCode" class="empty-state">
-      <span class="empty-icon">📋</span> Vyberte vozidlo
+      <span class="empty-icon">📋</span> Vyberte vozidlo ze seznamu vlevo
     </div>
 
     <div v-else-if="loading" class="empty-state"><span class="empty-icon">⏳</span> Načítám…</div>
