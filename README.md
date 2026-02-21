@@ -41,7 +41,7 @@ Dále drobné opravy/vylepšení původního návrhu, které se v průběhu vytv
 
 **Funkce a UX/UI:**
 
-- Skrývání/přidávání panelů (customizace dashboardu podle požadavků konkrétního uživatele, nejlépe drag & drop)
+- Skrývání/přidávání panelů, změna jejich velikosti a změna velikosti mapy podle potřeby uživatele
 - Pokročilejší filtry (datum, řidič, typ jízdy)
 - Eco-driving skóre a porovnání řidičů napříč flotilou
 - Výpočet nákladů na palivo (cena/litr × spotřeba)
