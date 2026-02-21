@@ -186,15 +186,36 @@ header {
   display: grid;
   grid-template-columns: 25% 1fr;
   height: calc(100vh - 58px);
-  background-image: url(/public/back.jpg);
-  background-repeat: no-repeat;
-  background-size: cover;
 }
 
 .main-content {
   display: grid;
   grid-template-rows: 1fr auto;
   overflow: hidden;
+}
+
+.resize-handle {
+  height: 8px;
+  background: var(--border);
+  cursor: ns-resize;
+  position: relative;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.resize-handle:hover {
+  background: var(--accent);
+}
+
+.resize-handle::before {
+  content: '⋯';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted);
+  font-size: 16px;
+  letter-spacing: 4px;
 }
 
 /* ─── SIDEBAR ────────────────────────────────────────────── */
@@ -261,7 +282,7 @@ header {
 .vehicle-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 8px 0;
 }
 
 .vehicle-list::-webkit-scrollbar {
@@ -290,7 +311,7 @@ header {
 
 .vehicle-card.active {
   background: #e3f2fd;
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--accent2);
 }
 
 .vehicle-card-top {
@@ -309,7 +330,7 @@ header {
 
 .vehicle-spz {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
   background: var(--surface);
   padding: 2px 6px;
@@ -318,9 +339,8 @@ header {
 }
 
 .vehicle-stats {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  grid-area: stats;
+  font-size: 12px;
 }
 
 .speed-badge {
@@ -332,7 +352,7 @@ header {
 }
 
 .speed-moving {
-  background: rgba(0, 200, 83, 0.05);
+  background: #00c8530d;
   color: var(--accent);
 }
 .speed-stopped {
@@ -394,7 +414,7 @@ header {
   color: var(--accent2);
   font-family: 'Syne', sans-serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 18px;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -408,7 +428,7 @@ header {
 
 .detail-item {
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* border: 1px solid var(--border); */
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -436,7 +456,7 @@ header {
   margin-bottom: 8px;
   padding: 8px 12px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* border: 1px solid var(--border); */
   border-radius: 8px;
   font-family: 'DM Mono', monospace;
   font-size: 12px;
@@ -657,16 +677,16 @@ header {
     height: auto;
   }
 
-  .vehicle-list {
+  /* .vehicle-list {
     display: flex;
     flex-direction: row;
     overflow-x: auto;
     overflow-y: visible;
     flex: none;
     height: auto;
-    padding: 8px;
+    padding: 8px 0;
     gap: 8px;
-  }
+  } */
 
   .vehicle-list::-webkit-scrollbar {
     height: 3px;
@@ -740,5 +760,242 @@ header {
 
   .detail-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   NOVÝ LAYOUT - 3 sloupce
+   ════════════════════════════════════════════════════════ */
+
+.app-layout-new {
+  display: flex;
+  height: calc(100vh - 58px);
+  position: relative;
+}
+
+/* Resize handle mezi sloupci */
+.column-resize-handle {
+  width: 8px;
+  background: var(--border);
+  cursor: ew-resize;
+  z-index: 50;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.column-resize-handle:hover {
+  background: var(--accent);
+}
+
+.column-resize-handle::before {
+  /* content: '⋮'; */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 8px;
+}
+
+/* ─── LEVÝ SIDEBAR ────────────────────────────────────────── */
+.left-sidebar {
+  /* background: var(--surface); */
+  background-color: #fff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* Klikatelné menu - bílé pole s rámečkem */
+.collapsible-menu {
+  margin: 16px 12px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.collapsible-menu:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 6px rgba(0, 200, 83, 0.15);
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-icon {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.menu-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: var(--text);
+  flex: 1;
+}
+
+/* Rozbalený seznam */
+.vehicle-dropdown {
+  padding: 12px;
+  /* border-bottom: 1px solid var(--border);*/
+  background: var(--bg);
+}
+
+.vehicle-list-compact {
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.vehicle-list-compact::-webkit-scrollbar {
+  width: 3px;
+}
+
+.vehicle-list-compact::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+.vehicle-card-compact {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name spz'
+    'stats stats';
+  gap: 4px 8px;
+}
+
+.vehicle-card-compact:hover {
+  background: var(--surface2);
+}
+
+.vehicle-card-compact.active {
+  background: #e3f2fd;
+  border-left: 3px solid var(--accent);
+}
+
+.vehicle-name-compact {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.vehicle-spz-compact {
+  grid-area: spz;
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  max-height: 20px;
+}
+
+/* Detail vozidla pod menu */
+.vehicle-detail-panel {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.panel-title-small {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ─── PRAVÁ ČÁST ──────────────────────────────────────────── */
+.right-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.bottom-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  flex: 1;
+  border-top: 1px solid var(--border);
+}
+
+.bottom-panels > * {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.bottom-panels > *:last-child {
+  border-right: none;
+}
+
+/* ─── MOBILE ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .app-layout-new {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .left-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vehicle-dropdown {
+    max-height: none;
+  }
+
+  .vehicle-list-compact {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    max-height: none;
+  }
+
+  .vehicle-card-compact {
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+
+  .right-content {
+    height: auto;
+  }
+
+  .map-wrapper {
+    height: 400px !important;
+  }
+
+  .bottom-panels {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .bottom-panels > * {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    max-height: 260px;
   }
 }
