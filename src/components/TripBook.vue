@@ -33,7 +33,7 @@
 
     <!-- Bez vozidla -->
     <div v-if="!vehicleCode" class="empty-state">
-      <span class="empty-icon">📋</span> Vyberte vozidlo ze seznamu vlevo
+      <span class="empty-icon">📋</span> Pro zobrazení údajů vyber vozidlo z mapy nebo ze seznamu
     </div>
 
     <div v-else-if="loading" class="empty-state"><span class="empty-icon">⏳</span> Načítám…</div>
@@ -188,7 +188,11 @@ async function load() {
 
 watch(
   () => props.vehicleCode,
-  () => load(),
+  async (v, old) => {
+    if (!v || v === old) return
+    await load()
+  },
+  { immediate: true },
 )
 
 // ─── Seskupit jízdy po dnech ──────────────────────────────
@@ -269,6 +273,20 @@ function formatFuel(trip) {
     ? ((liters / trip.TotalDistance) * 100).toFixed(1) + ' l/100km'
     : ''
   return `${liters.toFixed(1)} l /  ⌀ ${lp100}`
+}
+
+//cache
+async function loadTripBook(vehicleCode) {
+  if (tripbookCache.has(vehicleCode)) {
+    tripBook.value = tripbookCache.get(vehicleCode)
+    return
+  }
+
+  const res = await fetch(`/api/v1/tripbook/${vehicleCode}`)
+  const data = await res.json()
+
+  tripbookCache.set(vehicleCode, data)
+  tripBook.value = data
 }
 </script>
 
@@ -445,7 +463,7 @@ function formatFuel(trip) {
 
 .trip-detail {
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* border: 1px solid var(--border); */
   border-top: none;
   border-radius: 0 0 8px 8px;
   padding: 10px 12px;
