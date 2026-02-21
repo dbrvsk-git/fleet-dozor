@@ -54,6 +54,7 @@ Dále drobné opravy/vylepšení původního návrhu, které se v průběhu vytv
 **Technické:**
 
 - Zakomponování více error hlášení, některá demo data se nezobrazují korektně a není jasné, jestli je to chyba aplikace nebo data nejsou zadána
+- Chování mapy, centrování markeru na střed
 - Backend proxy pro bezpečné API credentials
 - Cache pro zrychlení opakovaných dotazů
 
