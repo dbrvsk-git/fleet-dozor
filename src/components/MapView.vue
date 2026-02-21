@@ -110,7 +110,7 @@ function updateMarkers(vehicles) {
   vehicles.forEach((v) => {
     const lat = parseFloat(v.LastPosition?.Latitude)
     const lng = parseFloat(v.LastPosition?.Longitude)
-    if (lat == null || lng == null) return
+    if (!lat || !lng) return
 
     const isActive = props.selected?.Code === v.Code
     const icon = makeIcon(v.Speed, isActive)
@@ -192,16 +192,7 @@ watch(
     const lat = parseFloat(v.LastPosition?.Latitude)
     const lng = parseFloat(v.LastPosition?.Longitude)
 
-    if (props.mode === 'live' && lat && lng) {
-      map.flyTo([lat, lng], 13, {
-        animate: true,
-      })
-
-      // posun mapy aby auto nebylo pod panely
-      setTimeout(() => {
-        map.panBy([0, -window.innerHeight * 0.2])
-      }, 250)
-    }
+    if (props.mode === 'live' && lat && lng) map.setView([lat, lng], 13, { animate: true })
 
     // Načti počasí na poloze vozidla (s drobným debounce)
     if (lat && lng) {
