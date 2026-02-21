@@ -23,24 +23,78 @@
       </div>
       <div class="header-datetime">
         <div class="header-date">{{ date }}</div>
-        <span style="color: white">|</span>
+        <span style="color: #fff"> | </span>
         <div class="header-time">{{ clock }}</div>
       </div>
     </header>
 
     <!-- LAYOUT -->
-    <div class="app-layout">
-      <!-- Sidebar se seznamem vozidel -->
-      <VehicleList
-        :vehicles="vehicles"
-        :selected="selected"
-        :loading="vehiclesLoading"
-        @select="onSelectVehicle"
-      />
+    <div class="app-layout-new">
+      <!-- Levý panel: Collapsible menu + detail -->
+      <div class="left-sidebar" :style="{ width: leftWidth + 'px' }">
+        <!-- Klikatelné menu vozidel -->
+        <div class="collapsible-menu" @click="menuOpen = !menuOpen">
+          <div class="menu-header">
+            <span class="menu-icon">{{ menuOpen ? '▼' : '▶' }}</span>
+            <span class="menu-title">SEZNAM VOZIDEL</span>
+            <span class="count-badge">{{ vehicles.length }}</span>
+          </div>
+        </div>
 
-      <!-- Pravá část: mapa + spodní panel -->
-      <div class="main-content">
-        <div class="map-wrapper">
+        <!-- Rozbalený seznam vozidel -->
+        <div v-if="menuOpen" class="vehicle-dropdown">
+          <input
+            v-model="search"
+            class="search-box"
+            type="text"
+            placeholder="Hledat vozidlo nebo SPZ…"
+            @click.stop
+          />
+          <div class="vehicle-list">
+            <div
+              v-for="v in filteredVehicles"
+              :key="v.Code"
+              class="vehicle-card-compact"
+              :class="{ active: selected?.Code === v.Code }"
+              @click="onSelectVehicle(v)"
+            >
+              <div class="vehicle-name-compact">{{ v.Name }}</div>
+              <div v-if="v.SPZ" class="vehicle-spz-compact">RZ: {{ v.SPZ }}</div>
+
+              <div class="vehicle-stats">
+                <span class="speed-badge" :class="v.Speed > 3 ? 'speed-moving' : 'speed-stopped'">
+                  {{ v.Speed > 3 ? `▶ ${v.Speed} km/h` : '■ stojí' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail vybraného vozidla -->
+        <div v-if="selected" class="vehicle-detail-panel">
+          <div class="panel-title-small">
+            DETAIL VOZIDLA
+            <span class="vehicle-name-title">{{ selected?.Name || '—' }}</span>
+          </div>
+          <VehicleDetail :vehicle="selected" />
+        </div>
+      </div>
+
+      <!-- Resize handle pro levý sloupec -->
+      <div
+        class="column-resize-handle"
+        :style="{ left: leftWidth + 'px' }"
+        @mousedown="startColumnResize"
+        title="Přetáhněte pro změnu šířky"
+      ></div>
+
+      <!-- Pravá část: mapa + 2 panely -->
+      <div class="right-content">
+        <div
+          class="map-wrapper"
+          ref="mapWrapper"
+          :style="vehicleChosen ? { height: mapHeight + 'px' } : { height: '100%' }"
+        >
           <MapView
             :vehicles="vehicles"
             :selected="selected"
@@ -51,20 +105,17 @@
           />
         </div>
 
-        <div class="bottom-panel">
-          <!-- Detail vybraného vozidla -->
-          <div class="panel-section">
-            <div class="panel-title">
-              Detail vozidla
-              <span class="vehicle-name-title">{{ selected?.Name || '—' }}</span>
-            </div>
-            <VehicleDetail :vehicle="selected" />
-          </div>
+        <!-- Resize handle -->
+        <div
+          v-if="vehicleChosen"
+          class="resize-handle"
+          @mousedown="startResize"
+          title="Přetáhněte pro změnu velikosti mapy"
+        ></div>
 
-          <!-- Kniha jízd -->
+        <!-- Spodní panely (2 sloupce) -->
+        <div v-if="vehicleChosen" class="bottom-panels">
           <TripBook :vehicle-code="selected?.Code" @dates-change="onDatesChange" />
-
-          <!-- Spotřeba paliva -->
           <FuelAnalysis :vehicle-code="selected?.Code" />
         </div>
       </div>
@@ -73,10 +124,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getGroups, getVehicles, getVehicleHistory, formatDateForApi } from './api/gpsdozor.js'
 
-import VehicleList from './components/VehicleList.vue'
 import MapView from './components/MapView.vue'
 import TripBook from './components/TripBook.vue'
 import FuelAnalysis from './components/FuelAnalysis.vue'
@@ -86,7 +136,6 @@ import VehicleDetail from './components/VehicleDetail.vue'
 const appLoading = ref(true)
 const loadingPct = ref(0)
 const loadingText = ref('Připojuji se k API…')
-const vehiclesLoading = ref(false)
 
 const groupName = ref('—')
 const groupCode = ref('SAGU')
@@ -98,8 +147,45 @@ const clock = ref('')
 const date = ref('')
 const dates = ref({ from: null, to: null })
 
+//nove!!!!
+const vehicleChosen = ref(false)
+
+// Menu state
+const menuOpen = ref(true)
+const search = ref('')
+
+// Resize state
+const mapHeight = ref(500)
+
+const getLeftWidth = () => {
+  if (window.innerWidth < 900) {
+    return window.innerWidth
+  }
+  return Math.floor(window.innerWidth * 0.25)
+}
+
+const leftWidth = ref(getLeftWidth())
+
+const mapWrapper = ref(null)
+
+let isResizing = false
+let isResizingColumn = false
+
+window.addEventListener('resize', () => {
+  leftWidth.value = getLeftWidth()
+})
+/*------------*/
 let refreshInterval = null
 let clockInterval = null
+
+// ─── Filtered vehicles ────────────────────────────────────
+const filteredVehicles = computed(() => {
+  if (!search.value) return vehicles.value
+  const q = search.value.toLowerCase()
+  return vehicles.value.filter(
+    (v) => v.Name.toLowerCase().includes(q) || (v.SPZ || '').toLowerCase().includes(q),
+  )
+})
 
 // ─── Clock + Date ─────────────────────────────────────────
 function updateClock() {
@@ -115,6 +201,53 @@ function updateClock() {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+// ─── Resize handlers ──────────────────────────────────────
+function startResize(e) {
+  isResizing = true
+  document.addEventListener('mousemove', doResize)
+  document.addEventListener('mouseup', stopResize)
+  e.preventDefault()
+}
+
+function doResize(e) {
+  if (!isResizing) return
+  const containerHeight = window.innerHeight - 58
+  const newMapHeight = e.clientY - 58
+  if (newMapHeight > 200 && newMapHeight < containerHeight - 200) {
+    mapHeight.value = newMapHeight
+  }
+}
+
+function stopResize() {
+  isResizing = false
+  document.removeEventListener('mousemove', doResize)
+  document.removeEventListener('mouseup', stopResize)
+}
+
+// ─── Column resize handlers ───────────────────────────────
+function startColumnResize(e) {
+  isResizingColumn = true
+  document.addEventListener('mousemove', doColumnResize)
+  document.addEventListener('mouseup', stopColumnResize)
+  e.preventDefault()
+}
+
+function doColumnResize(e) {
+  if (!isResizingColumn) return
+  const newWidth = e.clientX
+  const minWidth = 250
+  const maxWidth = window.innerWidth * 0.4
+  if (newWidth > minWidth && newWidth < maxWidth) {
+    leftWidth.value = newWidth
+  }
+}
+
+function stopColumnResize() {
+  isResizingColumn = false
+  document.removeEventListener('mousemove', doColumnResize)
+  document.removeEventListener('mouseup', stopColumnResize)
 }
 
 // ─── Inicializace ─────────────────────────────────────────
@@ -134,6 +267,11 @@ onMounted(async () => {
     loadingText.value = 'Načítám vozidla…'
     vehicles.value = await getVehicles(group.Code)
 
+    // Auto-výběr prvního vozidla
+    // if (vehicles.value.length > 0) {
+    //   selected.value = vehicles.value[0]
+    // }
+
     loadingPct.value = 100
     loadingText.value = 'Hotovo!'
 
@@ -141,7 +279,6 @@ onMounted(async () => {
       appLoading.value = false
     }, 400)
 
-    // Auto-refresh každých 30 sekund
     refreshInterval = setInterval(refreshVehicles, 30_000)
   } catch (e) {
     loadingText.value = 'Chyba připojení: ' + e.message
@@ -158,8 +295,6 @@ async function refreshVehicles() {
   try {
     const fresh = await getVehicles(groupCode.value)
     vehicles.value = fresh
-
-    // Aktualizuj selected vehicle pokud je vybrané
     if (selected.value) {
       const updated = fresh.find((v) => v.Code === selected.value.Code)
       if (updated) selected.value = updated
@@ -170,8 +305,20 @@ async function refreshVehicles() {
 }
 
 // ─── Výběr vozidla ────────────────────────────────────────
+// function onSelectVehicle(vehicle) {
+//  selected.value = vehicle
+//  menuOpen.value = false // Zavři menu po výběru
+//  if (mapMode.value === 'track' && dates.value.from) {
+//    loadRoute()
+//  }
+// }
+
+//nove!!!
 function onSelectVehicle(vehicle) {
   selected.value = vehicle
+  vehicleChosen.value = true
+  menuOpen.value = false
+
   if (mapMode.value === 'track' && dates.value.from) {
     loadRoute()
   }
@@ -187,7 +334,7 @@ async function onModeChange(mode) {
   }
 }
 
-// ─── Načtení trasy z history endpointu ───────────────────
+// ─── Načtení trasy ────────────────────────────────────────
 async function loadRoute() {
   if (!selected.value || !dates.value.from || !dates.value.to) return
   try {
@@ -201,9 +348,13 @@ async function loadRoute() {
   }
 }
 
-// ─── Callback z TripBook — jen pro mapu ──────────────────
+// ─── Callback z TripBook ──────────────────────────────────
 function onDatesChange({ from, to }) {
   dates.value = { from, to }
   if (mapMode.value === 'track') loadRoute()
 }
+
+//jednoduchá cache
+const tripbookCache = new Map()
+const fuelCache = new Map()
 </script>
