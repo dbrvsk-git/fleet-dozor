@@ -41,7 +41,7 @@ Dále drobné opravy/vylepšení původního návrhu, které se v průběhu vytv
 
 **Funkce a UX/UI:**
 
-- Skrývání/přidávání panelů, změna jejich velikosti a změna velikosti mapy podle potřeby uživatele
+- Skrývání/přidávání panelů, změna jejich velikosti
 - Pokročilejší filtry (datum, řidič, typ jízdy)
 - Eco-driving skóre a porovnání řidičů napříč flotilou
 - Výpočet nákladů na palivo (cena/litr × spotřeba)
@@ -63,8 +63,6 @@ Dále drobné opravy/vylepšení původního návrhu, které se v průběhu vytv
 - Leaflet.js — interaktivní mapa
 - Chart.js — grafy spotřeby a jízd
 - OpenWeatherMap API — aktuální počasí
-- CSS Variables — design systém bez UI frameworku
-- Vite Proxy — CORS řešení pro dev prostředí
 
 Funkční demo zde:
-https://fleet-dozor-demo.netlify.app/
+https://fleet-dozor.vercel.app/
